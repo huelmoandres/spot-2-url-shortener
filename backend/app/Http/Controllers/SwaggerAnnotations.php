@@ -8,7 +8,7 @@ namespace App\Http\Controllers;
  * @OA\Info(
  *     title="Spot2 URL Shortener API",
  *     version="1.0.0",
- *     description="API RESTful para acortar URLs. Desafío técnico Spot2 IC FullStack.",
+ *     description="RESTful API for URL shortening. Spot2 FullStack IC technical challenge.",
  *
  *     @OA\Contact(
  *         email="dante@spot2.mx",
@@ -18,12 +18,12 @@ namespace App\Http\Controllers;
  *
  * @OA\Server(
  *     url=L5_SWAGGER_CONST_HOST,
- *     description="Servidor local (Laravel Sail)"
+ *     description="Local server (Laravel Sail)"
  * )
  *
  * @OA\Tag(
  *     name="URLs",
- *     description="Operaciones de acortamiento y redirección de URLs"
+ *     description="URL shortening and redirection operations"
  * )
  *
  * @OA\Schema(
@@ -31,9 +31,9 @@ namespace App\Http\Controllers;
  *     type="object",
  *     required={"short_code", "short_url", "original_url"},
  *
- *     @OA\Property(property="short_code",   type="string", example="aBc3mNp", description="Código único de 7 caracteres Base58"),
- *     @OA\Property(property="short_url",    type="string", example="http://localhost/aBc3mNp", description="URL corta completa lista para compartir"),
- *     @OA\Property(property="original_url", type="string", example="https://google.com/maps/restaurantes-cdmx", description="URL original enviada")
+ *     @OA\Property(property="short_code",   type="string", example="aBc3mNp", description="Unique 7-character Base58 code"),
+ *     @OA\Property(property="short_url",    type="string", example="http://localhost/aBc3mNp", description="Complete shortened URL ready to share"),
+ *     @OA\Property(property="original_url", type="string", example="https://google.com/maps/restaurantes-cdmx", description="Submitted original URL")
  * )
  *
  * @OA\Schema(

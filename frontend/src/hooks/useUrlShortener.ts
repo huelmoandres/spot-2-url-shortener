@@ -6,8 +6,7 @@ import type { ShortenedUrl, HistoryItem } from '@/types/url'
 import { URLS_QUERY_KEY } from '@/hooks/useUrls'
 
 /**
- * Custom Hook: useUrlShortener
- * Hook de dominio que orquestra la mutación asíncrona y la actualización del historial.
+ * Domain hook that orchestrates URL shortening mutation and history updates.
  */
 export const useUrlShortener = () => {
     const { items: history, addToHistory } = useHistory()

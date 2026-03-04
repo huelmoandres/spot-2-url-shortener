@@ -67,14 +67,64 @@ class GetUrlsTest extends TestCase
     #[Test]
     public function it_returns_422_for_invalid_per_page(): void
     {
-        $response = $this->getJson('/api/urls?per_page=0');
-        $response->assertStatus(422)->assertJsonValidationErrors(['per_page']);
+        $this->getJson('/api/urls?per_page=0')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['per_page']);
     }
 
     #[Test]
     public function it_returns_422_when_per_page_exceeds_maximum(): void
     {
-        $response = $this->getJson('/api/urls?per_page=101');
-        $response->assertStatus(422)->assertJsonValidationErrors(['per_page']);
+        $this->getJson('/api/urls?per_page=101')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['per_page']);
+    }
+
+    #[Test]
+    public function it_returns_422_for_invalid_sort_value(): void
+    {
+        $this->getJson('/api/urls?sort=random')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['sort']);
+    }
+
+    #[Test]
+    public function it_sorts_newest_first_by_default(): void
+    {
+        $older = Url::factory()->create(['created_at' => now()->subMinutes(5)]);
+        $newer = Url::factory()->create(['created_at' => now()]);
+
+        $response = $this->getJson('/api/urls');
+
+        $response->assertStatus(200);
+        $this->assertEquals($newer->short_code, $response->json('data.0.shortCode'));
+        $this->assertEquals($older->short_code, $response->json('data.1.shortCode'));
+    }
+
+    #[Test]
+    public function it_sorts_oldest_first_when_requested(): void
+    {
+        $older = Url::factory()->create(['created_at' => now()->subMinutes(5)]);
+        $newer = Url::factory()->create(['created_at' => now()]);
+
+        $response = $this->getJson('/api/urls?sort=oldest');
+
+        $response->assertStatus(200);
+        $this->assertEquals($older->short_code, $response->json('data.0.shortCode'));
+        $this->assertEquals($newer->short_code, $response->json('data.1.shortCode'));
+    }
+
+    #[Test]
+    public function it_paginates_to_second_page_correctly(): void
+    {
+        Url::factory()->count(7)->create();
+
+        $response = $this->getJson('/api/urls?per_page=5&page=2');
+
+        $response->assertStatus(200);
+        $this->assertCount(2, $response->json('data'));
+        $this->assertEquals(2, $response->json('meta.current_page'));
+        $this->assertEquals(2, $response->json('meta.last_page'));
+        $this->assertEquals(7, $response->json('meta.total'));
     }
 }

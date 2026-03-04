@@ -9,9 +9,7 @@ interface State {
 }
 
 /**
- * ErrorBoundary
- * Componente de clase necesario en React para capturar errores fatales en el 
- * árbol de renderizado, evitando que la aplicación completa se rompa ("white screen of death").
+ * Class-based React boundary that isolates fatal render errors.
  */
 export class ErrorBoundary extends Component<Props, State> {
     public state: State = {

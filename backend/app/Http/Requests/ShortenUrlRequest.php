@@ -19,8 +19,7 @@ class ShortenUrlRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'url' de Laravel usa FILTER_VALIDATE_URL que acepta cualquier esquema (ftp://, data://, etc.)
-            // La regla regex restringe explícitamente a http y https para evitar esquemas peligrosos.
+            // Laravel's url rule accepts multiple schemes; regex restricts input to http/https.
             'url' => ['required', 'string', 'url', 'max:2048', 'regex:/^https?:\/\//i'],
         ];
     }
@@ -32,9 +31,9 @@ class ShortenUrlRequest extends FormRequest
     {
         return [
             'url.required' => 'A URL is required.',
-            'url.url'      => 'The provided value is not a valid URL.',
-            'url.max'      => 'The URL must not exceed 2048 characters.',
-            'url.regex'    => 'Only http and https URLs are accepted.',
+            'url.url' => 'The provided value is not a valid URL.',
+            'url.max' => 'The URL must not exceed 2048 characters.',
+            'url.regex' => 'Only http and https URLs are accepted.',
         ];
     }
 }

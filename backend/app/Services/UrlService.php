@@ -6,12 +6,13 @@ namespace App\Services;
 
 use App\Models\Url;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Cache;
 
 class UrlService
 {
-    private const CACHE_TTL = 86400; // 24 horas
+    private const CACHE_TTL = 86400; // 24 hours
 
     private const CACHE_PREFIX = 'url:redirect:';
 
@@ -20,20 +21,18 @@ class UrlService
     ) {}
 
     /**
-     * Acorta una URL y la persiste en la base de datos.
+     * Shortens a URL and persists it.
      *
-     * Implementa idempotencia: si la URL ya existe, devuelve el registro existente
-     * en lugar de crear uno nuevo con un código distinto.
-     * Cachea el mapeo en Redis para búsquedas rápidas.
+     * Uses idempotent behavior to avoid duplicate short codes for the same URL.
      */
     public function shorten(string $url): Url
     {
-        // Idempotencia: reutiliza el código corto si la URL ya fue acortada
+        // Keep URL shortening idempotent by reusing existing records.
         $existing = Url::where('original_url', $url)->first();
 
         if ($existing !== null) {
-            // Refresca el TTL del caché por si expiró
-            Cache::put(self::CACHE_PREFIX . $existing->short_code, $url, self::CACHE_TTL);
+            // Refresh cache TTL so hot links remain in Redis.
+            Cache::put(self::CACHE_PREFIX.$existing->short_code, $url, self::CACHE_TTL);
 
             return $existing;
         }
@@ -42,29 +41,24 @@ class UrlService
 
         $urlRecord = Url::create([
             'original_url' => $url,
-            'short_code'   => $shortCode,
+            'short_code' => $shortCode,
         ]);
 
-        Cache::put(self::CACHE_PREFIX . $shortCode, $url, self::CACHE_TTL);
+        Cache::put(self::CACHE_PREFIX.$shortCode, $url, self::CACHE_TTL);
 
         return $urlRecord;
     }
 
     /**
-     * Resuelve un código corto a su URL original.
+     * Resolves a short code to its original URL.
      *
-     * Patrón Cache-Aside: lee de Redis primero, hace fallback a MySQL solo en
-     * cache miss y únicamente cachea resultados positivos (no cachea 404s).
-     *
-     * NOTA: no se usa Cache::remember() porque éste almacena valores nulos,
-     * lo que causaría cache poisoning: un código buscado antes de ser creado
-     * quedaría cacheado como null durante el TTL completo.
+     * Uses cache-aside and stores only successful lookups to avoid null-cache poisoning.
      *
      * @throws ModelNotFoundException
      */
     public function resolve(string $shortCode): string
     {
-        $cacheKey = self::CACHE_PREFIX . $shortCode;
+        $cacheKey = self::CACHE_PREFIX.$shortCode;
 
         $originalUrl = Cache::get($cacheKey);
 
@@ -75,39 +69,56 @@ class UrlService
                 throw new ModelNotFoundException("Short code [{$shortCode}] not found.");
             }
 
-            // Solo cacheamos cuando el resultado es positivo
+            // Cache only positive lookups to prevent stale null entries.
             Cache::put($cacheKey, $originalUrl, self::CACHE_TTL);
         }
 
-        // increment() emite un UPDATE atómico: `SET click_count = click_count + 1`
+        // increment() performs an atomic UPDATE: click_count = click_count + 1.
         Url::where('short_code', $shortCode)->increment('click_count');
 
         return $originalUrl;
     }
 
     /**
-     * Devuelve una lista paginada de URLs, con filtrado opcional por texto.
+     * Returns a paginated URL list with optional filtering and sorting.
      *
-     * Nota de performance: la búsqueda con LIKE "%term%" no usa el índice de
-     * short_code. Para producción a escala, considerar un índice FULLTEXT en
-     * original_url o migrar la búsqueda a un motor de search (Meilisearch, Typesense).
+     * Uses explicit column selection and stable ordering for predictable pagination.
+     *
+     * @param  positive-int  $perPage  Maximum 100 (validated in FormRequest)
+     * @param  positive-int  $page  Explicit page number
      */
-    public function getPaginated(int $perPage = 15, ?string $search = null): LengthAwarePaginator
-    {
-        $query = Url::query();
+    public function getPaginated(
+        int $perPage = 15,
+        int $page = 1,
+        ?string $search = null,
+        string $sort = 'newest',
+    ): LengthAwarePaginator {
+        /** @var Builder<Url> $query */
+        $query = Url::query()->select([
+            'id',
+            'original_url',
+            'short_code',
+            'click_count',
+            'created_at',
+            'updated_at',
+        ]);
 
         if ($search !== null && $search !== '') {
-            $query->where(function ($q) use ($search): void {
+            $query->where(function (Builder $q) use ($search): void {
                 $q->where('original_url', 'like', "%{$search}%")
                     ->orWhere('short_code', 'like', "%{$search}%");
             });
         }
 
-        return $query->latest()->paginate($perPage);
+        // Secondary sort by id keeps ordering stable for equal created_at values.
+        $direction = $sort === 'oldest' ? 'asc' : 'desc';
+        $query->orderBy('created_at', $direction)->orderBy('id', $direction);
+
+        return $query->paginate(perPage: $perPage, page: $page);
     }
 
     /**
-     * Elimina una URL por su código corto y limpia el caché.
+     * Deletes a URL by short code and clears the cache entry.
      *
      * @throws ModelNotFoundException
      */
@@ -117,6 +128,6 @@ class UrlService
 
         $url->delete();
 
-        Cache::forget(self::CACHE_PREFIX . $shortCode);
+        Cache::forget(self::CACHE_PREFIX.$shortCode);
     }
 }

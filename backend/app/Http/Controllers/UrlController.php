@@ -13,42 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use RuntimeException;
 
-/**
- * @OA\Info(
- *     title="Spot2 URL Shortener API",
- *     version="1.0.0",
- *     description="API RESTful para acortar URLs. Desafío técnico Spot2 IC FullStack.",
- *
- *     @OA\Contact(name="Spot2 Tech Team", email="dante@spot2.mx")
- * )
- *
- * @OA\Server(url="http://localhost", description="Servidor local (Laravel Sail)")
- *
- * @OA\Schema(
- *     schema="ValidationError",
- *     type="object",
- *
- *     @OA\Property(property="message", type="string", example="The url field is required."),
- *     @OA\Property(
- *         property="errors",
- *         type="object",
- *
- *         @OA\Property(
- *             property="url",
- *             type="array",
- *
- *             @OA\Items(type="string", example="A URL is required.")
- *         )
- *     )
- * )
- *
- * @OA\Schema(
- *     schema="NotFoundError",
- *     type="object",
- *
- *     @OA\Property(property="message", type="string", example="Short code [aBc3mNp] not found.")
- * )
- */
 class UrlController extends Controller
 {
     public function __construct(
@@ -59,8 +23,8 @@ class UrlController extends Controller
      * @OA\Get(
      *     path="/api/urls",
      *     tags={"URLs"},
-     *     summary="Listar URLs",
-     *     description="Devuelve una lista paginada de URLs acortadas. Permite filtrar por texto.",
+     *     summary="List shortened URLs",
+     *     description="Returns a paginated list of shortened URLs with optional text filtering.",
      *     operationId="getUrls",
      *
      *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", default=1)),
@@ -69,7 +33,7 @@ class UrlController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Lista paginada de URLs",
+     *         description="Paginated URL list",
      *
      *         @OA\JsonContent(
      *             type="object",
@@ -93,7 +57,6 @@ class UrlController extends Controller
      *             @OA\Property(
      *                 property="meta",
      *                 type="object",
-     *
      *                 @OA\Property(property="current_page", type="integer"),
      *                 @OA\Property(property="last_page", type="integer"),
      *                 @OA\Property(property="per_page", type="integer"),
@@ -104,16 +67,19 @@ class UrlController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=429, description="Rate limit excedido")
+     *     @OA\Response(response=429, description="Rate limit exceeded")
      * )
      */
     public function index(GetUrlsQueryRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $perPage   = (int) ($validated['per_page'] ?? 15);
-        $search    = $validated['search'] ?? null;
 
-        $paginator = $this->urlService->getPaginated($perPage, $search);
+        $paginator = $this->urlService->getPaginated(
+            perPage: (int) ($validated['per_page'] ?? 15),
+            page: (int) ($validated['page'] ?? 1),
+            search: $validated['search'] ?? null,
+            sort: $validated['sort'] ?? 'newest',
+        );
 
         return UrlResource::collection($paginator)->response();
     }
@@ -122,22 +88,22 @@ class UrlController extends Controller
      * @OA\Delete(
      *     path="/api/urls/{shortCode}",
      *     tags={"URLs"},
-     *     summary="Eliminar una URL acortada",
-     *     description="Elimina una URL específica por su código corto y limpia el caché.",
+     *     summary="Delete a shortened URL",
+     *     description="Deletes a URL by short code and clears its cache entry.",
      *     operationId="deleteUrl",
      *
      *     @OA\Parameter(
      *         name="shortCode",
      *         in="path",
      *         required=true,
-     *         description="Código corto de la URL (1-8 caracteres alfanuméricos)",
+     *         description="URL short code (1-8 alphanumeric characters)",
      *
      *         @OA\Schema(type="string", example="aBc3mNp", pattern="^[a-zA-Z0-9]{1,8}$")
      *     ),
      *
-     *     @OA\Response(response=204, description="URL eliminada exitosamente"),
-     *     @OA\Response(response=404, description="Short code no encontrado", @OA\JsonContent(ref="#/components/schemas/NotFoundError")),
-     *     @OA\Response(response=429, description="Rate limit excedido")
+     *     @OA\Response(response=204, description="URL deleted successfully"),
+     *     @OA\Response(response=404, description="Short code not found", @OA\JsonContent(ref="#/components/schemas/NotFoundError")),
+     *     @OA\Response(response=429, description="Rate limit exceeded")
      * )
      */
     public function destroy(string $shortCode): JsonResponse
@@ -157,8 +123,8 @@ class UrlController extends Controller
      * @OA\Post(
      *     path="/api/shorten",
      *     tags={"URLs"},
-     *     summary="Acortar una URL",
-     *     description="Recibe una URL larga y devuelve un código corto único de máximo 8 caracteres (Base58). Idempotente: la misma URL siempre devuelve el mismo código corto.",
+     *     summary="Shorten a URL",
+     *     description="Receives a long URL and returns a unique short code with up to 8 Base58 characters. Idempotent: the same URL always returns the same short code.",
      *     operationId="shortenUrl",
      *
      *     @OA\RequestBody(
@@ -172,14 +138,14 @@ class UrlController extends Controller
      *                 type="string",
      *                 format="uri",
      *                 example="https://www.google.com/maps/search/restaurantes+en+cdmx",
-     *                 description="URL válida con protocolo http o https, máximo 2048 caracteres."
+     *                 description="Valid URL with http or https protocol, up to 2048 characters."
      *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=201,
-     *         description="URL acortada exitosamente",
+     *         description="URL shortened successfully",
      *
      *         @OA\JsonContent(
      *             type="object",
@@ -190,9 +156,9 @@ class UrlController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=422, description="URL inválida o faltante", @OA\JsonContent(ref="#/components/schemas/ValidationError")),
-     *     @OA\Response(response=429, description="Rate limit excedido (60 req/min por IP)"),
-     *     @OA\Response(response=503, description="No fue posible generar un código único. Reintentar.")
+     *     @OA\Response(response=422, description="Missing or invalid URL", @OA\JsonContent(ref="#/components/schemas/ValidationError")),
+     *     @OA\Response(response=429, description="Rate limit exceeded (60 req/min per IP)"),
+     *     @OA\Response(response=503, description="Could not generate a unique code. Retry the request.")
      * )
      */
     public function shorten(ShortenUrlRequest $request): JsonResponse
@@ -200,17 +166,15 @@ class UrlController extends Controller
         try {
             $url = $this->urlService->shorten($request->validated('url'));
         } catch (RuntimeException) {
-            // El generador agotó MAX_ATTEMPTS sin encontrar un código disponible.
-            // Extremadamente improbable (57^7 ≈ 1.3×10¹² combinaciones), pero lo
-            // capturamos para evitar un 500 y orientar al cliente a reintentar.
+            // Handle rare keyspace exhaustion gracefully instead of returning a generic 500.
             return response()->json([
                 'message' => 'Could not generate a unique short code. Please try again.',
             ], 503);
         }
 
         return response()->json([
-            'shortCode'   => $url->short_code,
-            'shortUrl'    => url("/{$url->short_code}"),
+            'shortCode' => $url->short_code,
+            'shortUrl' => url("/{$url->short_code}"),
             'originalUrl' => $url->original_url,
         ], 201);
     }
@@ -219,27 +183,27 @@ class UrlController extends Controller
      * @OA\Get(
      *     path="/{shortCode}",
      *     tags={"URLs"},
-     *     summary="Redirigir a la URL original",
-     *     description="Recibe un short code y redirige al usuario a la URL original con HTTP 302. Incrementa el contador de visitas.\n\n⚠️ **Nota:** No probable desde Swagger UI (el browser sigue el redirect). Usar `curl -v http://localhost/{shortCode}`.",
+     *     summary="Redirect to the original URL",
+     *     description="Receives a short code and redirects with HTTP 302 to the original URL, incrementing click_count.\n\n⚠️ **Note:** Swagger UI may follow redirects automatically. Use `curl -v http://localhost/{shortCode}` for verification.",
      *     operationId="redirectUrl",
      *
      *     @OA\Parameter(
      *         name="shortCode",
      *         in="path",
      *         required=true,
-     *         description="Código corto de la URL (1-8 caracteres alfanuméricos)",
+     *         description="URL short code (1-8 alphanumeric characters)",
      *
      *         @OA\Schema(type="string", example="aBc3mNp", pattern="^[a-zA-Z0-9]{1,8}$")
      *     ),
      *
      *     @OA\Response(
      *         response=302,
-     *         description="Redirección exitosa a la URL original",
+     *         description="Successful redirect to the original URL",
      *
-     *         @OA\Header(header="Location", description="URL original", @OA\Schema(type="string", format="uri"))
+     *         @OA\Header(header="Location", description="Original URL", @OA\Schema(type="string", format="uri"))
      *     ),
      *
-     *     @OA\Response(response=404, description="Short code no encontrado", @OA\JsonContent(ref="#/components/schemas/NotFoundError"))
+     *     @OA\Response(response=404, description="Short code not found", @OA\JsonContent(ref="#/components/schemas/NotFoundError"))
      * )
      */
     public function redirect(string $shortCode): RedirectResponse|JsonResponse

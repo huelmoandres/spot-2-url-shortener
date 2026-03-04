@@ -12,8 +12,7 @@ const formatDate = (iso: string) => {
 }
 
 /**
- * Componente HistoryList
- * Optimizado con React.memo para evitar re-renders innecesarios cuando el padre se actualiza.
+ * Memoized list to avoid unnecessary re-renders from parent state changes.
  */
 function HistoryListComponent({ items }: Props) {
     if (items.length === 0) return null

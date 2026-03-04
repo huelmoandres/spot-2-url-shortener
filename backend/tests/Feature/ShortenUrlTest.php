@@ -68,7 +68,7 @@ class ShortenUrlTest extends TestCase
     #[Test]
     public function it_returns_422_when_url_is_too_long(): void
     {
-        $longUrl = 'https://example.com/' . str_repeat('a', 2048);
+        $longUrl = 'https://example.com/'.str_repeat('a', 2048);
 
         $this->postJson('/api/shorten', ['url' => $longUrl])
             ->assertStatus(422)
@@ -91,7 +91,7 @@ class ShortenUrlTest extends TestCase
     {
         $originalUrl = 'https://spot2.mx/propiedades/oficina-en-renta';
 
-        $first  = $this->postJson('/api/shorten', ['url' => $originalUrl]);
+        $first = $this->postJson('/api/shorten', ['url' => $originalUrl]);
         $second = $this->postJson('/api/shorten', ['url' => $originalUrl]);
 
         // Ambas respuestas deben devolver el mismo código corto
@@ -104,7 +104,7 @@ class ShortenUrlTest extends TestCase
     #[Test]
     public function it_generates_different_short_codes_for_different_urls(): void
     {
-        $first  = $this->postJson('/api/shorten', ['url' => 'https://example.com/first']);
+        $first = $this->postJson('/api/shorten', ['url' => 'https://example.com/first']);
         $second = $this->postJson('/api/shorten', ['url' => 'https://example.com/second']);
 
         $this->assertNotSame($first->json('shortCode'), $second->json('shortCode'));

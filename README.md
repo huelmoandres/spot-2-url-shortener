@@ -24,8 +24,6 @@ El proyecto está compuesto por dos aplicaciones independientes que se comunican
 | Backend API | `/backend` | `http://localhost` (Docker) |
 | Frontend SPA | `/frontend` | `http://localhost:5173` (Vite) |
 
-Documentación técnica detallada del backend en [`backend/docs/ARCHITECTURE.md`](backend/docs/ARCHITECTURE.md).
-
 ---
 
 ## Backend (`/backend`)
@@ -144,8 +142,105 @@ Dos pipelines en GitHub Actions que se activan en cada `push`/PR a `main`:
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
-| `backend-ci.yml` | `backend/**` | **tests** (PHP 8.2/8.3/8.4/8.5 en matriz) + **lint** (Laravel Pint) |
-| `frontend.yml` | `frontend/**` | **build-and-lint** (ESLint + `tsc -b` + Vite build) |
+| `backend-ci.yml` | `backend/**` | **tests** (PHP 8.2/8.3/8.4/8.5 en matriz) + **lint** (Laravel Pint) + **deploy** |
+| `frontend.yml` | `frontend/**` | **build-and-lint** (ESLint + `tsc -b` + Vite build) + **deploy** |
+
+El job **deploy** solo corre en `push` a `main` (no en PRs) y ejecuta el Deploy Hook de Railway. Requiere dos secrets en el repositorio de GitHub:
+
+| Secret | Descripción |
+|--------|-------------|
+| `RAILWAY_BACKEND_DEPLOY_HOOK` | URL del Deploy Hook del servicio backend en Railway |
+| `RAILWAY_FRONTEND_DEPLOY_HOOK` | URL del Deploy Hook del servicio frontend en Railway |
+
+---
+
+## Despliegue en Railway
+
+El proyecto incluye Dockerfiles de producción optimizados para Railway. Los servicios necesarios son:
+
+| Servicio | Tipo | Directorio raíz |
+|----------|------|-----------------|
+| `backend` | Dockerfile | `backend/` |
+| `frontend` | Dockerfile | `frontend/` |
+| `mysql` | Plugin Railway | — |
+| `redis` | Plugin Railway | — |
+
+### Pasos para desplegar
+
+#### 1. Crear el proyecto en Railway
+
+1. Ir a [railway.app](https://railway.app) → **New Project**
+2. Seleccionar **Empty Project**
+
+#### 2. Agregar MySQL y Redis
+
+1. En el proyecto, click en **+ Add Service** → **Database** → **MySQL 8**
+2. Click en **+ Add Service** → **Database** → **Redis**
+
+#### 3. Crear el servicio backend
+
+1. **+ Add Service** → **GitHub Repo** → selecciona este repositorio
+2. En la configuración del servicio → **Settings**:
+   - **Root Directory:** `backend`
+   - El Dockerfile se detecta automáticamente
+3. En la pestaña **Variables**, agrega:
+
+```
+APP_NAME=Spot2 URL Shortener
+APP_ENV=production
+APP_KEY=          ← genera con: php artisan key:generate --show
+APP_DEBUG=false
+APP_URL=https://<tu-dominio-backend>.up.railway.app
+FRONTEND_URL=https://<tu-dominio-frontend>.up.railway.app
+
+DB_CONNECTION=mysql
+DB_HOST=${{MySQL.MYSQL_HOST}}
+DB_PORT=${{MySQL.MYSQL_PORT}}
+DB_DATABASE=${{MySQL.MYSQL_DATABASE}}
+DB_USERNAME=${{MySQL.MYSQL_USER}}
+DB_PASSWORD=${{MySQL.MYSQL_PASSWORD}}
+
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+REDIS_HOST=${{Redis.REDIS_HOST}}
+REDIS_PORT=${{Redis.REDIS_PORT}}
+REDIS_PASSWORD=${{Redis.REDIS_PASSWORD}}
+
+LOG_CHANNEL=stderr
+LOG_LEVEL=error
+```
+
+> **Nota:** Railway permite referenciar variables de otros servicios con la sintaxis `${{Servicio.VARIABLE}}`.
+
+#### 4. Crear el servicio frontend
+
+1. **+ Add Service** → **GitHub Repo** → selecciona este repositorio
+2. En **Settings**:
+   - **Root Directory:** `frontend`
+3. En **Variables** (son variables de build, ya que Vite las embebe en el bundle):
+
+```
+VITE_API_BASE_URL=https://<tu-dominio-backend>.up.railway.app/api
+VITE_BACKEND_URL=https://<tu-dominio-backend>.up.railway.app
+```
+
+#### 5. Configurar CD automático desde GitHub Actions
+
+1. En cada servicio de Railway → **Settings** → **Deploy** → **Deploy Hooks** → **Create Hook**
+2. Copiar la URL generada
+3. En GitHub → **Settings** → **Secrets and variables** → **Actions**:
+   - Agregar `RAILWAY_BACKEND_DEPLOY_HOOK` con la URL del backend
+   - Agregar `RAILWAY_FRONTEND_DEPLOY_HOOK` con la URL del frontend
+
+A partir de ahí, cada `push` a `main` ejecuta los tests y, si pasan, lanza el deploy automáticamente.
+
+#### 6. Generar APP_KEY
+
+```bash
+cd backend
+php artisan key:generate --show
+# Copia el resultado en la variable APP_KEY de Railway
+```
 
 ---
 
@@ -164,24 +259,28 @@ spot2-url-shortener/
 │   │   └── Services/
 │   │       ├── UrlService.php
 │   │       └── ShortCodeGeneratorService.php
-│   ├── docs/
-│   │   └── ARCHITECTURE.md        ← decisiones técnicas detalladas
+│   ├── docker/                    ← Configs de producción (Nginx, Supervisor, entrypoint)
 │   ├── routes/
 │   │   ├── api.php                ← POST /shorten, GET/DELETE /urls
 │   │   └── web.php                ← GET /{shortCode} (sin prefijo /api/)
-│   └── tests/Feature/             ← 25 tests, 606 assertions
+│   ├── tests/Feature/             ← 25 tests, 606 assertions
+│   ├── Dockerfile                 ← Imagen de producción (PHP-FPM + Nginx)
+│   └── railway.toml               ← Configuración de despliegue Railway
 │
 ├── frontend/
+│   ├── docker/                    ← Configs de producción (Nginx, entrypoint)
 │   ├── src/
 │   │   ├── components/ui/         ← Button, Input, Card, Spinner, Skeleton…
 │   │   ├── hooks/                 ← useUrlShortener, useUrls, useHistory…
 │   │   ├── pages/                 ← HomePage, UrlsPage, RedirectPage
 │   │   └── services/url.service.ts
-│   └── src/index.css              ← @theme {} design system tokens
+│   ├── src/index.css              ← @theme {} design system tokens
+│   ├── Dockerfile                 ← Imagen de producción (Vite build + Nginx)
+│   └── railway.toml               ← Configuración de despliegue Railway
 │
 └── .github/workflows/
-    ├── backend-ci.yml
-    └── frontend.yml
+    ├── backend-ci.yml             ← CI (tests × 4 versiones PHP) + CD
+    └── frontend.yml               ← CI (lint + build) + CD
 ```
 
 ---

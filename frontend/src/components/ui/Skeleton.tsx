@@ -5,8 +5,7 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Componente Skeleton
- * Provee un efecto de carga asíncrona ("shimmer") para mejorar la UX percibida.
+ * Skeleton placeholder used to reduce perceived latency during async loads.
  */
 export default function Skeleton({ className = '', ...props }: SkeletonProps) {
     return (

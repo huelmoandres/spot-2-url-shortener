@@ -2,10 +2,9 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 /**
- * Card — Contenedor de superficie corporativo.
+ * Card surface primitive and composable subcomponents.
  *
- * Todos los sub-componentes usan forwardRef y extienden HTMLAttributes<HTMLDivElement>
- * para composición máxima: se pueden pasar onClick, aria-*, data-* etc.
+ * All subcomponents use `forwardRef` and standard div attributes for composition.
  */
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -26,8 +25,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
 Card.displayName = 'Card'
 
 /**
- * CardAccent — Barra de color superior (branding Spot2).
- * Composable: se incluye dentro de Card cuando se desee.
+ * Optional top accent bar for brand emphasis.
  */
 const CardAccent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (

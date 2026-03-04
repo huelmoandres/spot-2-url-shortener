@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 
 /**
- * Retrasa la actualización de un valor por un tiempo definido.
- * Utilizado para evitar llamadas múltiples a la API mientras el usuario escribe en un input de búsqueda.
+ * Delays value propagation to reduce bursty side effects (e.g., live-search API calls).
  */
 export function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value)

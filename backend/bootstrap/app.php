@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust Railway's edge proxy so Laravel generates https:// URLs correctly
+        $middleware->trustProxies(at: '*');
         // CORS is configured via config/cors.php
         // No authentication middleware — this is a public API
     })

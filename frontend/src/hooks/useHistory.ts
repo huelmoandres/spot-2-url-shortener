@@ -3,9 +3,7 @@ import { HISTORY_KEY, MAX_HISTORY_ITEMS } from '@/constants'
 import type { HistoryItem } from '@/types/url'
 
 /**
- * Custom Hook: useHistory
- * Encapsule la lógica de persistencia del historial en localStorage.
- * Provee métodos memoizados para manipular y leer el historial.
+ * Persists URL history in localStorage and exposes memoized mutation helpers.
  */
 export const useHistory = () => {
     const [items, setItems] = useState<HistoryItem[]>(() => {
@@ -17,7 +15,7 @@ export const useHistory = () => {
         }
     })
 
-    // Memoizado para evitar re-renders cuando el hook se consume en sub-componentes.
+    // Memoized to reduce avoidable downstream re-renders.
     const addToHistory = useCallback((newItem: HistoryItem) => {
         setItems((prev) => {
             const filtered = prev.filter((item) => item.originalUrl !== newItem.originalUrl)

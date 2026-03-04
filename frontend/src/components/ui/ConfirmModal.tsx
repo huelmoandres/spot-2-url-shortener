@@ -13,9 +13,7 @@ interface ConfirmModalProps {
 }
 
 /**
- * ConfirmModal
- * Diálogo de confirmación reutilizable con sistema de diseño corporativo.
- * Usa el átomo Button para consistencia visual y de comportamiento.
+ * Reusable confirmation dialog aligned with the shared button primitive.
  */
 export default function ConfirmModal({
     isOpen,
@@ -32,14 +30,14 @@ export default function ConfirmModal({
 
     return (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-            {/* Backdrop */}
+            {/* Overlay backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-[2px] animate-fade-in"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            {/* Panel */}
+            {/* Dialog panel */}
             <div
                 className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-2xl shadow-slate-900/20 dark:shadow-none animate-scale-in border border-slate-200 dark:border-slate-800"
                 role="dialog"

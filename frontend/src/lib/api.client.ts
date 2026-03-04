@@ -2,12 +2,7 @@ import axios from 'axios'
 import { API_BASE_URL } from '@/constants'
 
 /**
- * API Client (Axios)
- * Configuración centralizada siguiendo mejores prácticas:
- * - BaseURL desde constantes (vía .env)
- * - Timeout para evitar peticiones colgadas (Performance)
- * - Headers estandarizados
- * - Interceptores para manejo de errores global
+ * Shared Axios client with sane defaults and centralized error interception.
  */
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -15,12 +10,12 @@ const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        // Crucial para Laravel: le indica que es una petición AJAX (evita redirecciones 302 en errores de sesión y requiere Sanctum si se activara auth)
+        // Ensures Laravel treats the request as AJAX and returns JSON-shaped errors.
         'X-Requested-With': 'XMLHttpRequest',
     }
 })
 
-// Interceptor de respuesta para logging en desarrollo
+// Development-only response logging for faster troubleshooting.
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
