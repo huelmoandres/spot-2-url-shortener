@@ -10,7 +10,9 @@ use RuntimeException;
 class ShortCodeGeneratorService
 {
     private const ALPHABET = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
     private const CODE_LENGTH = 7;
+
     private const MAX_ATTEMPTS = 5;
 
     /**
@@ -23,12 +25,12 @@ class ShortCodeGeneratorService
         for ($attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++) {
             $code = $this->generateRandom();
 
-            if (!Url::where('short_code', $code)->exists()) {
+            if (! Url::where('short_code', $code)->exists()) {
                 return $code;
             }
         }
 
-        throw new RuntimeException('Unable to generate a unique short code after ' . self::MAX_ATTEMPTS . ' attempts.');
+        throw new RuntimeException('Unable to generate a unique short code after '.self::MAX_ATTEMPTS.' attempts.');
     }
 
     /**

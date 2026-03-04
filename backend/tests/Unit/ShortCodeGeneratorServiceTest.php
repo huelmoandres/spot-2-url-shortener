@@ -19,7 +19,7 @@ class ShortCodeGeneratorServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->generator = new ShortCodeGeneratorService();
+        $this->generator = new ShortCodeGeneratorService;
     }
 
     #[Test]
@@ -37,7 +37,7 @@ class ShortCodeGeneratorServiceTest extends TestCase
         $validChars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
         $this->assertMatchesRegularExpression(
-            '/^[' . preg_quote($validChars, '/') . ']+$/',
+            '/^['.preg_quote($validChars, '/').']+$/',
             $code,
         );
     }

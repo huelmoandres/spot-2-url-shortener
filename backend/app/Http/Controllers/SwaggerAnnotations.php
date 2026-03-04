@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
  *     title="Spot2 URL Shortener API",
  *     version="1.0.0",
  *     description="API RESTful para acortar URLs. Desafío técnico Spot2 IC FullStack.",
+ *
  *     @OA\Contact(
  *         email="dante@spot2.mx",
  *         name="Spot2 Tech Team"
@@ -29,6 +30,7 @@ namespace App\Http\Controllers;
  *     schema="ShortenedUrl",
  *     type="object",
  *     required={"short_code", "short_url", "original_url"},
+ *
  *     @OA\Property(property="short_code",   type="string", example="aBc3mNp", description="Código único de 7 caracteres Base58"),
  *     @OA\Property(property="short_url",    type="string", example="http://localhost/aBc3mNp", description="URL corta completa lista para compartir"),
  *     @OA\Property(property="original_url", type="string", example="https://google.com/maps/restaurantes-cdmx", description="URL original enviada")
@@ -37,6 +39,7 @@ namespace App\Http\Controllers;
  * @OA\Schema(
  *     schema="ValidationError",
  *     type="object",
+ *
  *     @OA\Property(property="message", type="string", example="The provided value is not a valid URL."),
  *     @OA\Property(
  *         property="errors",
@@ -44,6 +47,7 @@ namespace App\Http\Controllers;
  *         @OA\Property(
  *             property="url",
  *             type="array",
+ *
  *             @OA\Items(type="string", example="The provided value is not a valid URL.")
  *         )
  *     )
@@ -52,9 +56,8 @@ namespace App\Http\Controllers;
  * @OA\Schema(
  *     schema="NotFoundError",
  *     type="object",
+ *
  *     @OA\Property(property="message", type="string", example="Short code [nope123] not found.")
  * )
  */
-class SwaggerAnnotations
-{
-}
+class SwaggerAnnotations {}
