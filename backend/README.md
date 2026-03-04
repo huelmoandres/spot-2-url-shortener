@@ -28,7 +28,7 @@
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/spot2-url-shortener.git
+git clone https://github.com/huelmoandres/spot-2-url-shortener.git
 cd spot2-url-shortener/backend
 ```
 
