@@ -1,0 +1,388 @@
+{
+    "info": {
+        "_postman_id": "spot2-url-shortener-collection",
+        "name": "Spot2 URL Shortener API",
+        "description": "Colección para testear la API del acortador de URLs del desafío técnico Spot2.\n\nEndpoints:\n- POST /api/shorten → Acorta una URL\n- GET /{shortCode} → Redirige a la URL original (SIN prefijo /api/)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Shorten URL",
+            "item": [
+                {
+                    "name": "✅ Acortar URL válida",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has short_code', function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('short_code');",
+                                    "    pm.expect(json.short_code).to.be.a('string');",
+                                    "    pm.expect(json.short_code.length).to.be.at.most(8);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has short_url', function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('short_url');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has original_url', function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('original_url');",
+                                    "});",
+                                    "",
+                                    "// Guardar el short_code para usar en el request de redirect",
+                                    "var json = pm.response.json();",
+                                    "if (json.short_code) {",
+                                    "    pm.environment.set('short_code', json.short_code);",
+                                    "    console.log('short_code guardado:', json.short_code);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"url\": \"https://www.google.com/maps/search/restaurantes+en+cdmx/@19.4284,-99.1277,14z\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/shorten",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "shorten"
+                            ]
+                        },
+                        "description": "Acorta una URL larga y devuelve el short_code generado (máx. 8 caracteres).\n\nEl test automáticamente guarda el `short_code` en la variable de entorno para usarlo en el request de redirección."
+                    },
+                    "response": [
+                        {
+                            "name": "201 Created — Éxito",
+                            "originalRequest": {
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"url\": \"https://www.google.com/maps/search/restaurantes+en+cdmx\"\n}"
+                                }
+                            },
+                            "status": "Created",
+                            "code": 201,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n    \"short_code\": \"aB3mNpq\",\n    \"short_url\": \"http://localhost/aB3mNpq\",\n    \"original_url\": \"https://www.google.com/maps/search/restaurantes+en+cdmx\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "❌ URL inválida (sin protocolo)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 422', function () {",
+                                    "    pm.response.to.have.status(422);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has validation error for url', function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('errors');",
+                                    "    pm.expect(json.errors).to.have.property('url');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"url\": \"google.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/shorten",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "shorten"
+                            ]
+                        },
+                        "description": "Verifica que la API rechaza URLs sin protocolo (http:// o https://).\nDebe devolver 422 Unprocessable Entity."
+                    },
+                    "response": [
+                        {
+                            "name": "422 Validation Error",
+                            "status": "Unprocessable Entity",
+                            "code": 422,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n    \"message\": \"The provided value is not a valid URL.\",\n    \"errors\": {\n        \"url\": [\"The provided value is not a valid URL.\"]\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "❌ Sin body (campo url vacío)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 422', function () {",
+                                    "    pm.response.to.have.status(422);",
+                                    "});",
+                                    "",
+                                    "pm.test('Error mentions url field', function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.errors).to.have.property('url');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/shorten",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "shorten"
+                            ]
+                        },
+                        "description": "Verifica que la API requiere el campo url.\nDebe devolver 422."
+                    }
+                },
+                {
+                    "name": "❌ String que no es URL",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"url\": \"esto no es una url\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/shorten",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "shorten"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Redirect URL",
+            "item": [
+                {
+                    "name": "✅ Redirigir con short_code válido",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 302', function () {",
+                                    "    // Postman sigue automáticamente los redirects a menos que se configure",
+                                    "    // Si el redirect se sigue, el status final será 200.",
+                                    "    // Para ver el 302 nativo, desactivar 'Follow Redirects' en Settings.",
+                                    "    pm.expect([200, 302]).to.include(pm.response.code);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/{{short_code}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "{{short_code}}"
+                            ]
+                        },
+                        "description": "Redirige al usuario a la URL original a través del short_code.\n\n⚠️ IMPORTANTE: Para ver el HTTP 302 nativo, ve a Settings → desactiva 'Automatically follow redirects'.\n\nUsa el {{short_code}} guardado por el request 'Acortar URL válida'."
+                    }
+                },
+                {
+                    "name": "✅ Redirigir con código hardcodeado",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/aB3mNpq",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "aB3mNpq"
+                            ]
+                        },
+                        "description": "Reemplaza 'aB3mNpq' con un short_code real de tu base de datos."
+                    }
+                },
+                {
+                    "name": "❌ Short code inexistente",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 404', function () {",
+                                    "    pm.response.to.have.status(404);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has message', function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json).to.have.property('message');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/nope123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "nope123"
+                            ]
+                        },
+                        "description": "Verifica que la API devuelve 404 cuando el código no existe."
+                    },
+                    "response": [
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n    \"message\": \"Short code [nope123] not found.\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Health Check",
+            "item": [
+                {
+                    "name": "API Health",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Server is running', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/up",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "up"
+                            ]
+                        },
+                        "description": "Verifica que el servidor Laravel esté corriendo. Retorna 200 si está saludable."
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "short_code",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

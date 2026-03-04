@@ -1,0 +1,188 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Spot2 URL Shortener API",
+        "description": "API RESTful para acortar URLs. Desafío técnico Spot2 IC FullStack.",
+        "contact": {
+            "name": "Spot2 Tech Team",
+            "email": "dante@spot2.mx"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost",
+            "description": "Servidor local (Laravel Sail)"
+        }
+    ],
+    "paths": {
+        "/api/shorten": {
+            "post": {
+                "tags": [
+                    "URLs"
+                ],
+                "summary": "Acortar una URL",
+                "description": "Recibe una URL larga y devuelve un código corto único de máximo 8 caracteres (Base58).",
+                "operationId": "shortenUrl",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "url"
+                                ],
+                                "properties": {
+                                    "url": {
+                                        "description": "URL válida con protocolo (http:// o https://), máximo 2048 caracteres",
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://www.google.com/maps/search/restaurantes+en+cdmx"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "URL acortada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShortenedUrl"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "URL inválida o faltante",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit excedido (60 req/min por IP)"
+                    }
+                }
+            }
+        },
+        "/{shortCode}": {
+            "get": {
+                "tags": [
+                    "URLs"
+                ],
+                "summary": "Redirigir a la URL original",
+                "description": "Recibe un short code y redirige al usuario a la URL original con HTTP 302. Incrementa el contador de visitas.\\n\\n⚠️ **Nota:** Este endpoint no se puede probar con 'Try it out' en Swagger UI porque el browser sigue el redirect a un sitio externo que no tiene CORS habilitado para localhost. Probarlo directamente en la barra del browser o con curl: `curl -v http://localhost/{shortCode}`",
+                "operationId": "redirectUrl",
+                "parameters": [
+                    {
+                        "name": "shortCode",
+                        "in": "path",
+                        "description": "Código corto de la URL (1-8 caracteres alfanuméricos)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9]{1,8}$",
+                            "example": "aBc3mNp"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirección exitosa a la URL original",
+                        "headers": {
+                            "Location": {
+                                "description": "URL original a la que se redirige",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Short code no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotFoundError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ShortenedUrl": {
+                "required": [
+                    "short_code",
+                    "short_url",
+                    "original_url"
+                ],
+                "properties": {
+                    "short_code": {
+                        "description": "Código único de 7 caracteres Base58",
+                        "type": "string",
+                        "example": "aBc3mNp"
+                    },
+                    "short_url": {
+                        "description": "URL corta completa lista para compartir",
+                        "type": "string",
+                        "example": "http://localhost/aBc3mNp"
+                    },
+                    "original_url": {
+                        "description": "URL original enviada",
+                        "type": "string",
+                        "example": "https://google.com/maps/restaurantes-cdmx"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationError": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "The provided value is not a valid URL."
+                    },
+                    "errors": {
+                        "properties": {
+                            "url": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "example": "The provided value is not a valid URL."
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "NotFoundError": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Short code [nope123] not found."
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "URLs",
+            "description": "Operaciones de acortamiento y redirección de URLs"
+        }
+    ]
+}

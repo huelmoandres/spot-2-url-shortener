@@ -1,0 +1,23 @@
+{
+    "id": "spot2-url-shortener-environment",
+    "name": "Spot2 URL Shortener — Local",
+    "values": [
+        {
+            "key": "base_url",
+            "value": "http://localhost",
+            "type": "default",
+            "enabled": true,
+            "description": "URL base del servidor Laravel Sail. Sail expone el puerto 80 por defecto."
+        },
+        {
+            "key": "short_code",
+            "value": "",
+            "type": "default",
+            "enabled": true,
+            "description": "Se llena automáticamente cuando haces el request 'Acortar URL válida'."
+        }
+    ],
+    "_postman_variable_scope": "environment",
+    "_postman_exported_at": "2026-03-03T21:46:00.000Z",
+    "_postman_exported_using": "Postman/11.x"
+}
