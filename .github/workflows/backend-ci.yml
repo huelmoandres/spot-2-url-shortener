@@ -2,7 +2,7 @@ name: CI — Spot2 URL Shortener Backend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'backend/**'
   pull_request:
@@ -22,7 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3']
+        # composer.json requires ^8.2; Sail runs 8.5 — test the full supported range.
+        php: ['8.2', '8.3', '8.4', '8.5']
 
     services:
       mysql:
@@ -105,8 +106,18 @@ jobs:
           php-version: '8.2'
           coverage: none
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-php-8.2-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php-8.2-
+
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
+        working-directory: backend
 
       - name: Check code style with Pint
         run: ./vendor/bin/pint --test
+        working-directory: backend

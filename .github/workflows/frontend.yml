@@ -1,38 +1,40 @@
-name: Frontend CI
+name: CI — Spot2 URL Shortener Frontend
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [main]
     paths:
       - 'frontend/**'
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [main]
     paths:
       - 'frontend/**'
 
+defaults:
+  run:
+    working-directory: frontend
+
 jobs:
   build-and-lint:
+    name: Lint, Type-check & Build
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./frontend
-
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-    - name: Run linter
-      run: npm run lint
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Type check and Build
-      run: npm run build
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Type-check and build (tsc + Vite)
+        run: npm run build
