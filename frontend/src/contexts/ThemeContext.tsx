@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { THEME_KEY } from '../constants'
+import { THEME_KEY } from '@/constants'
 
 type Theme = 'dark' | 'light'
 

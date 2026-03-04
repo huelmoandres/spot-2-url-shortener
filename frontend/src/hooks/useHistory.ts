@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
-import { HISTORY_KEY, MAX_HISTORY_ITEMS } from '../constants'
-import type { HistoryItem } from '../types/url'
+import { HISTORY_KEY, MAX_HISTORY_ITEMS } from '@/constants'
+import type { HistoryItem } from '@/types/url'
 
 /**
  * Custom Hook: useHistory
@@ -20,7 +20,7 @@ export const useHistory = () => {
     // Memoizado para evitar re-renders cuando el hook se consume en sub-componentes.
     const addToHistory = useCallback((newItem: HistoryItem) => {
         setItems((prev) => {
-            const filtered = prev.filter((item) => item.original_url !== newItem.original_url)
+            const filtered = prev.filter((item) => item.originalUrl !== newItem.originalUrl)
             const updated = [newItem, ...filtered].slice(0, MAX_HISTORY_ITEMS)
 
             try {
@@ -33,10 +33,22 @@ export const useHistory = () => {
         })
     }, [])
 
+    const removeItem = useCallback((shortCode: string) => {
+        setItems((prev) => {
+            const updated = prev.filter((item) => item.shortCode !== shortCode)
+            try {
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
+            } catch (e) {
+                console.warn('Error removing item from history', e)
+            }
+            return updated
+        })
+    }, [])
+
     const clearHistory = useCallback(() => {
         setItems([])
         localStorage.removeItem(HISTORY_KEY)
     }, [])
 
-    return { items, addToHistory, clearHistory }
+    return { items, addToHistory, clearHistory, removeItem }
 }

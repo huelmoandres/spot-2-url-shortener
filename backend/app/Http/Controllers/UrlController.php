@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GetUrlsQueryRequest;
 use App\Http\Requests\ShortenUrlRequest;
 use App\Services\UrlService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -14,7 +15,94 @@ class UrlController extends Controller
 {
     public function __construct(
         private readonly UrlService $urlService,
-    ) {}
+    ) {
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/urls",
+     *     tags={"URLs"},
+     *     summary="Listar URLs",
+     *     description="Devuelve una lista paginada de URLs acortadas. Permite filtrar por texto.",
+     *     operationId="getUrls",
+     *
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de página",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Cantidad de resultados por página",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Texto para buscar en la URL original o en el código corto",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de URLs",
+     *     )
+     * )
+     */
+    public function index(GetUrlsQueryRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $perPage = (int) ($validated['per_page'] ?? 15);
+        $search = $validated['search'] ?? null;
+
+        $paginator = $this->urlService->getPaginated($perPage, $search);
+
+        return \App\Http\Resources\UrlResource::collection($paginator)->response();
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/urls/{shortCode}",
+     *     tags={"URLs"},
+     *     summary="Eliminar una URL acortada",
+     *     description="Elimina una URL específica por su código corto y limpia el caché.",
+     *     operationId="deleteUrl",
+     *
+     *     @OA\Parameter(
+     *         name="shortCode",
+     *         in="path",
+     *         required=true,
+     *         description="Código corto de la URL (1-8 caracteres alfanuméricos)",
+     *         @OA\Schema(type="string", example="aBc3mNp")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=204,
+     *         description="URL eliminada exitosamente"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Short code no encontrado",
+     *         @OA\JsonContent(ref="#/components/schemas/NotFoundError")
+     *     )
+     * )
+     */
+    public function destroy(string $shortCode): JsonResponse
+    {
+        try {
+            $this->urlService->delete($shortCode);
+            return response()->json(null, 204);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'message' => "Short code [{$shortCode}] not found.",
+            ], 404);
+        }
+    }
 
     /**
      * @OA\Post(
@@ -43,14 +131,17 @@ class UrlController extends Controller
      *     @OA\Response(
      *         response=201,
      *         description="URL acortada exitosamente",
-     *
-     *         @OA\JsonContent(ref="#/components/schemas/ShortenedUrl")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="shortCode", type="string", example="aBc3mNp"),
+     *             @OA\Property(property="shortUrl", type="string", format="uri", example="http://localhost/aBc3mNp"),
+     *             @OA\Property(property="originalUrl", type="string", format="uri", example="https://www.google.com/maps/search/restaurantes+en+cdmx")
+     *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
      *         description="URL inválida o faltante",
-     *
      *         @OA\JsonContent(ref="#/components/schemas/ValidationError")
      *     ),
      *
@@ -65,9 +156,9 @@ class UrlController extends Controller
         $url = $this->urlService->shorten($request->validated('url'));
 
         return response()->json([
-            'short_code' => $url->short_code,
-            'short_url' => url("/{$url->short_code}"),
-            'original_url' => $url->original_url,
+            'shortCode' => $url->short_code,
+            'shortUrl' => url("/{$url->short_code}"),
+            'originalUrl' => $url->original_url,
         ], 201);
     }
 

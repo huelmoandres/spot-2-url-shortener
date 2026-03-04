@@ -80,9 +80,9 @@ class RedirectUrlTest extends TestCase
             'url' => 'https://spot2.mx/propiedades/oficina-en-renta/ciudad-de-mexico',
         ]);
 
-        $shortUrl = $response->json('short_url');
+        $shortUrl = $response->json('shortUrl');
 
-        // The short_url must NOT contain /api/ — it should be at root
+        // The shortUrl must NOT contain /api/ — it should be at root
         $this->assertStringNotContainsString('/api/', $shortUrl);
     }
 }

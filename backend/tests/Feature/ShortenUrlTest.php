@@ -21,10 +21,12 @@ class ShortenUrlTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'short_code',
-                'short_url',
-                'original_url',
+                'shortCode',
+                'shortUrl',
+                'originalUrl',
             ]);
+
+        $this->assertEquals('https://www.google.com/maps/search/restaurantes+en+cdmx', $response->json('originalUrl'));
     }
 
     #[Test]
@@ -47,7 +49,7 @@ class ShortenUrlTest extends TestCase
             'url' => 'https://example.com',
         ]);
 
-        $shortCode = $response->json('short_code');
+        $shortCode = $response->json('shortCode');
 
         $this->assertLessThanOrEqual(8, strlen($shortCode));
     }
@@ -62,35 +64,33 @@ class ShortenUrlTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_422_when_url_is_not_valid(): void
+    public function it_returns_422_when_url_is_invalid(): void
     {
-        $response = $this->postJson('/api/shorten', [
-            'url' => 'not-a-valid-url',
-        ]);
+        $response = $this->postJson('/api/shorten', ['url' => 'not-a-valid-url']);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['url']);
     }
 
     #[Test]
-    public function it_returns_422_when_url_is_just_a_string_without_protocol(): void
+    public function it_returns_422_when_url_is_too_long(): void
     {
-        $response = $this->postJson('/api/shorten', [
-            'url' => 'google.com',
-        ]);
+        $longUrl = 'https://example.com/' . str_repeat('a', 2048);
+
+        $response = $this->postJson('/api/shorten', ['url' => $longUrl]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['url']);
     }
 
     #[Test]
-    public function it_returns_the_original_url_in_the_response(): void
+    public function it_returns_the_same_short_code_for_the_same_url(): void
     {
         $originalUrl = 'https://spot2.mx/propiedades/oficina-en-renta';
 
         $response = $this->postJson('/api/shorten', ['url' => $originalUrl]);
 
-        $response->assertJsonFragment(['original_url' => $originalUrl]);
+        $response->assertJsonFragment(['originalUrl' => $originalUrl]);
     }
 
     #[Test]
@@ -100,8 +100,8 @@ class ShortenUrlTest extends TestCase
         $second = $this->postJson('/api/shorten', ['url' => 'https://example.com/second']);
 
         $this->assertNotSame(
-            $first->json('short_code'),
-            $second->json('short_code'),
+            $first->json('shortCode'),
+            $second->json('shortCode'),
         );
     }
 }

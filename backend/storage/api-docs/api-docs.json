@@ -16,6 +16,89 @@
         }
     ],
     "paths": {
+        "/api/urls": {
+            "get": {
+                "tags": [
+                    "URLs"
+                ],
+                "summary": "Listar URLs",
+                "description": "Devuelve una lista paginada de URLs acortadas. Permite filtrar por texto.",
+                "operationId": "getUrls",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad de resultados por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Texto para buscar en la URL original o en el código corto",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de URLs"
+                    }
+                }
+            }
+        },
+        "/api/urls/{shortCode}": {
+            "delete": {
+                "tags": [
+                    "URLs"
+                ],
+                "summary": "Eliminar una URL acortada",
+                "description": "Elimina una URL específica por su código corto y limpia el caché.",
+                "operationId": "deleteUrl",
+                "parameters": [
+                    {
+                        "name": "shortCode",
+                        "in": "path",
+                        "description": "Código corto de la URL (1-8 caracteres alfanuméricos)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "aBc3mNp"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "URL eliminada exitosamente"
+                    },
+                    "404": {
+                        "description": "Short code no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotFoundError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/shorten": {
             "post": {
                 "tags": [
@@ -51,7 +134,23 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ShortenedUrl"
+                                    "properties": {
+                                        "shortCode": {
+                                            "type": "string",
+                                            "example": "aBc3mNp"
+                                        },
+                                        "shortUrl": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "example": "http://localhost/aBc3mNp"
+                                        },
+                                        "originalUrl": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "example": "https://www.google.com/maps/search/restaurantes+en+cdmx"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }

@@ -1,112 +1,115 @@
 import { useState, useMemo, memo } from 'react'
-import type { ShortenedUrl } from '../types/url'
+import type { ShortenedUrl } from '@/types/url'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/Button'
 
 interface Props {
     result: ShortenedUrl
     onNew: () => void
 }
 
-/**
- * Componente UrlResult
- * Muestra el resultado de la operación satisfactoria.
- * Optimizado con React.memo y useMemo para evitar re-renders innecesarios.
- */
 function UrlResultComponent({ result, onNew }: Props) {
     const [copied, setCopied] = useState(false)
 
-    // Memorizamos cálculos que dependan de propiedades dinámicas
-    const shortCodeLength = useMemo(() => result.short_code.length, [result.short_code])
+    const shortCodeLength = useMemo(() => result.shortCode.length, [result.shortCode])
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(result.short_url)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2500)
+            await navigator.clipboard.writeText(result.shortUrl)
         } catch {
             const el = document.createElement('textarea')
-            el.value = result.short_url
+            el.value = result.shortUrl
             document.body.appendChild(el)
             el.select()
             document.execCommand('copy')
             document.body.removeChild(el)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2500)
         }
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2500)
     }
 
     return (
-        <div className="fade-in-up">
-            <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        <div className="animate-fade-in-up">
+            {/* Cabecera de éxito */}
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-success-50 dark:bg-success-500/10 flex items-center justify-center border border-success-100 dark:border-success-500/20 shrink-0">
+                    <svg className="w-6 h-6 text-success-600 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <span className="text-emerald-400 text-sm font-medium">¡URL acortada exitosamente!</span>
-            </div>
-
-            <div className="bg-white/50 dark:bg-white/5 rounded-xl p-4 border border-slate-200 dark:border-white/10 mb-3 shadow-sm">
-                <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wider font-medium">URL corta</p>
-                <div className="flex items-center justify-between gap-3">
-                    <a
-                        href={result.short_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-mono text-sm font-semibold transition-colors truncate"
-                    >
-                        {result.short_url}
-                    </a>
-                    <span className="shrink-0 text-xs text-slate-600 dark:text-slate-500 bg-slate-200/50 dark:bg-white/5 px-2 py-0.5 rounded-full">
-                        {shortCodeLength} chars
-                    </span>
+                <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">¡Enlace listo!</h3>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
+                        Spot2 Shortener Service
+                    </p>
                 </div>
             </div>
 
-            <div className="bg-white/50 dark:bg-white/5 rounded-xl p-4 border border-slate-200 dark:border-white/10 mb-5 shadow-sm">
-                <p className="text-xs text-slate-500 mb-1.5 uppercase tracking-wider font-medium">URL original</p>
-                <p className="text-slate-600 dark:text-slate-400 text-xs font-mono break-all leading-relaxed line-clamp-2">
-                    {result.original_url}
-                </p>
+            {/* Detalles del enlace */}
+            <div className="space-y-4 mb-8">
+                <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 transition-all hover:bg-white dark:hover:bg-slate-950">
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-2 block uppercase tracking-widest">
+                        Enlace Acortado
+                    </label>
+                    <div className="flex items-center justify-between gap-4">
+                        <Link
+                            target="_blank"
+                            to={`/${result.shortCode}`}
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-bold text-base transition-colors truncate underline decoration-primary-500/20 underline-offset-4"
+                        >
+                            {result.shortUrl}
+                        </Link>
+                        <span className="shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-600 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">
+                            {shortCodeLength} CH
+                        </span>
+                    </div>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-2 block uppercase tracking-widest">
+                        Propiedad Original
+                    </label>
+                    <p className="text-slate-700 dark:text-slate-300 text-xs font-medium break-all leading-relaxed line-clamp-2 italic">
+                        {result.originalUrl}
+                    </p>
+                </div>
             </div>
 
+            {/* Acciones */}
             <div className="flex gap-3">
-                <button
+                <Button
                     id="copy-btn"
+                    variant={copied ? 'success' : 'primary'}
+                    size="lg"
                     onClick={handleCopy}
-                    className={[
-                        'flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200',
-                        'focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-transparent',
-                        copied
-                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 focus:ring-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
-                            : 'bg-indigo-600 hover:bg-indigo-500 text-white focus:ring-indigo-500/50 shadow-md',
-                    ].join(' ')}
+                    className="flex-1"
                 >
-                    <span className="flex items-center justify-center gap-2">
-                        {copied ? (
-                            <>
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                                ¡Copiado!
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                Copiar
-                            </>
-                        )}
-                    </span>
-                </button>
+                    {copied ? (
+                        <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                            ¡Copiado!
+                        </>
+                    ) : (
+                        <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            Copiar Enlace
+                        </>
+                    )}
+                </Button>
 
-                <button
+                <Button
                     id="new-url-btn"
+                    variant="outline"
+                    size="lg"
                     onClick={onNew}
-                    className="py-3 px-4 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-white/10 shadow-sm"
+                    className="w-auto px-6"
                 >
-                    Nueva
-                </button>
+                    Nuevo
+                </Button>
             </div>
         </div>
     )

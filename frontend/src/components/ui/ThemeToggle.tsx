@@ -1,4 +1,4 @@
-import { useTheme } from '../../contexts/ThemeContext'
+import { useTheme } from '@/contexts/ThemeContext'
 
 // Ícono del sol (light mode)
 function SunIcon() {
@@ -32,7 +32,7 @@ export default function ThemeToggle() {
             onClick={toggleTheme}
             aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            className="fixed top-4 right-4 z-50 p-2.5 rounded-xl glass text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-all duration-200 cursor-pointer"
+            className="fixed top-4 right-4 z-50 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer active:scale-90"
         >
             {isDark ? <SunIcon /> : <MoonIcon />}
         </button>

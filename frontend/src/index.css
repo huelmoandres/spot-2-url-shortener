@@ -1,127 +1,121 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* ─────────────────────────────────────────────────────────────────────────────
+   Tailwind CSS v4 — Directiva principal
+   Reemplaza las tres directivas legacy (@tailwind base/components/utilities)
+   ───────────────────────────────────────────────────────────────────────────── */
 @import "tailwindcss";
 
-:root {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-feature-settings: 'cv11', 'ss01';
-}
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design System — Sistema de diseño corporativo Spot2 Prop-Tech
+   Todos los tokens se definen aquí como variables CSS nativas de Tailwind v4.
+   ───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* ── Tipografía ─────────────────────────────────────────────── */
+  --font-inter: "Inter", system-ui, sans-serif;
 
-* {
-  box-sizing: border-box;
-}
+  /* ── Paleta Primary: Azul corporativo desaturado (menos chillón) ── */
+  --color-primary-50:  #f4f7fb;
+  --color-primary-100: #e8eef7;
+  --color-primary-200: #cedcee;
+  --color-primary-300: #a9c0dd;
+  --color-primary-400: #7f9fc8;
+  --color-primary-500: #5d7faa;
+  --color-primary-600: #48648d;
+  --color-primary-700: #3a5174;
+  --color-primary-800: #324662;
+  --color-primary-900: #2d3d55;
+  --color-primary-950: #1b2436;
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background-attachment: fixed;
-  transition: background 0.3s ease, color 0.3s ease;
-}
+  /* ── Semántica: Éxito (operaciones completadas, enlaces activos) ── */
+  --color-success-50:  #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-200: #a7f3d0;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
 
-.dark body {
-  background: linear-gradient(135deg, #020617 0%, #0f0f2e 50%, #1e1b4b 100%);
-  color: #f1f5f9;
-  color-scheme: dark;
-}
+  /* ── Semántica: Peligro (eliminación, errores de validación) ── */
+  --color-danger-50:  #fff1f2;
+  --color-danger-100: #ffe4e6;
+  --color-danger-200: #fecdd3;
+  --color-danger-500: #f43f5e;
+  --color-danger-600: #e11d48;
+  --color-danger-700: #be123c;
 
-.light body {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
-  color: #0f172a;
-  color-scheme: light;
-}
+  /* ── Semántica: Advertencia (estados de precaución) ── */
+  --color-warning-50:  #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
 
-/* Glassmorphism utility */
-.glass {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
+  /* ── Animaciones del sistema ─────────────────────────────────── */
+  --animate-fade-in-up: fadeInUp 0.5s ease-out forwards;
+  --animate-fade-in:    fadeIn   0.3s ease-out forwards;
+  --animate-scale-in:   scaleIn  0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 
-.dark .glass {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.light .glass {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Glow effects */
-.glow-indigo {
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
-}
-
-/* Smooth transitions */
-* {
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.5);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.8);
-}
-
-/* Pulse animation for the loading indicator */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0);    }
   }
 
-  to {
-    transform: rotate(360deg);
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1);    }
   }
 }
 
-.spin-slow {
-  animation: spin-slow 2s linear infinite;
+/* ─────────────────────────────────────────────────────────────────────────────
+   Dark mode — Estrategia basada en clase (.dark) para control explícito
+   ───────────────────────────────────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Base layer — Resets y estilos globales gestionados por Tailwind
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    font-family: var(--font-inter);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    background-color: #f8fafc; /* slate-50 */
+    color: #0f172a;            /* slate-900 */
+  }
+
+  html.dark {
+    background-color: #020617; /* slate-950 */
+    color: #f8fafc;            /* slate-50  */
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
-/* Fade-in animation */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+/* ─────────────────────────────────────────────────────────────────────────────
+   Utilities layer — Utilidades custom que no existen en Tailwind core
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Scrollbar sutil para tablas con overflow */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #e2e8f0 transparent; /* slate-200 */
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in-up {
-  animation: fadeInUp 0.4s ease-out forwards;
-}
-
-/* Shimmer for loading skeleton */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
+  html.dark .scrollbar-thin {
+    scrollbar-color: #1e293b transparent; /* slate-800 */
   }
 
-  100% {
-    background-position: 200% 0;
-  }
+  /* Delay helpers para animaciones escalonadas */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
 }
