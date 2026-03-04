@@ -1,73 +1,63 @@
-# React + TypeScript + Vite
+# Spot2 Tech Challenge - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Esta es la aplicación cliente (SPA) desarrollada para el Tech Challenge de Spot2. Su objetivo es consumir el API del Shortener y ofrecer una interfaz impecable, moderna y ultra-rápida.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologías Principales
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** (Librería UI base)
+- **TypeScript** (Tipado estático robusto)
+- **Vite** (Bundler ultrarrápido)
+- **Tailwind CSS 4** (Framework de estilos de utilidad)
+- **React Router v7** (Enrutamiento del lado del cliente)
+- **Zod & React Hook Form** (Validación predictiva de formularios)
+- **Zustand / Hooks Personalizados** (Manejo de estado simplificado)
 
-## React Compiler
+## 📁 Estructura del Proyecto
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+El código está organizado de manera modular, siguiendo mejores prácticas de "Feature-first":
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+src/
+├── components/     # Componentes visuales genéricos y de dominio (UI, Layout, History, etc)
+├── contexts/       # Proveedores de contexto global (ej. ThemeContext para Dark Mode)
+├── hooks/          # Hooks personalizados que albergan toda la lógica de negocio (useUrlShortener)
+├── lib/            # Configuraciones de bibliotecas de terceros (Axios, React Query)
+├── pages/          # Vistas principales responsables del routing
+├── schemas/        # Esquemas de validación Zod (ej. validación de URL)
+└── types/          # Definiciones de TypeScript e interfaces comunes compartidas
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ✨ Características Destacables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. **Light & Dark Mode**: Un conmutador de temas inteligente implementado con `Context` que persiste la elección del usuario en `localStorage`. Toda la UI (incluidos efectos _Glassmorphism_ avanzados) se adapta orgánicamente gracias a la directiva `dark:` de Tailwind CSS.
+2. **Historial Persistente**: Las URLs que el usuario acorta persisten en caché del navegador (Local Storage) manteniéndolas disponibles entre sesiones.
+3. **Manejo Excepcional de Errores**: Uso de un componente `ErrorBoundary` para evitar la Pantalla Blanca de la Muerte en React. Feedback en tiempo real para URLs inválidas gracias a `Zod`.
+4. **CI/CD Integrado**: Configurado con GitHub Actions que revisa análisis de código estático (ESLint) y de tipos (TypeScript) en cada solicitud de fusión o push a la rama `main`.
+5. **Animaciones Fluidas**: Animaciones en CSS puro en `index.css` que dan feedback en las transiciones y validaciones del formulario, manteniendo la retención y foco del usuario.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 💻 Configuración Local
+
+Si has llegado hasta aquí desde la raíz principal, asegúrate de levantar el **Backend** primero.
+
+1. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+
+2. Ejecuta el entorno de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+3. Ingresa tu navegador web en `http://localhost:5173` o `http://localhost:5174` para comenzar.
+
+## 🔗 Variables de Entorno
+
+Puedes configurar el acceso base a tu API en caso de que necesites un endpoint diferente, usando un archivo `.env` en la raíz de `frontend/`:
+
+```env
+VITE_API_URL=http://localhost/api
+VITE_BACKEND_URL=http://localhost
 ```
+
+_Por defecto, tomará `http://localhost` para las rutas si no declaras un `.env`._
